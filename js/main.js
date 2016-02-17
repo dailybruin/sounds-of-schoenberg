@@ -11,7 +11,22 @@ var overlays = [];
 Handlebars.registerHelper("formatBodyText", function(t) {
 	t = t.trim();
 	var re = new RegExp('[\r\n]+', 'g');
-    return (t.length>0?'<p>'+t.replace(re,'</p><p>')+'</p>':null);
+    // return (t.length>0?'<p>'+t.replace(re,'</p><p>')+'</p>':null);
+    if (t.length > 0) {
+    	var ret_val = '';
+	    for (var i = 0; i < t.length; i++) { 
+	        if (t.codePointAt(i) > 127) {
+	            ret_val += '&#' + t.codePointAt(i) + ';';
+	        } else {
+	            ret_val += t.charAt(i);
+	        }
+	    }
+    	return ('<p>'+ret_val.replace(re,'</p><p>')+'</p>');
+
+    }
+    else {
+    	return (null);
+    }
 });
 
 var iconStyle = new ol.style.Style({
@@ -51,10 +66,17 @@ $(document).ready(function() {
 	})
 
 	$('#landing').on('DOMMouseScroll mousewheel swipedown', function ( event ) {
-	  console.log(event);
 	  if( event.originalEvent.detail > 0 || event.originalEvent.wheelDelta < 0 ) { //alternative options for wheelData: wheelDeltaX & wheelDeltaY
 	    hide_landing();
 	  }
+	});
+
+	$("#toptitle").click(function() {
+		console.log("hi");
+		$("#landing").slideDown(700);
+		$("#landing").children().each(function() {
+			$(this).fadeIn(500);
+		})
 	});
 
 	// Initialize the map
@@ -74,9 +96,11 @@ $(document).ready(function() {
 	});
 
 	// Get coordinate from click -- doesn't really work, gives you center of map
-	// map.on("click", function(evt) {
-	//  	console.log(map.getEventCoordinate(evt));
-	//  });
+	map.on("click", function(evt) {
+	 	// console.log(map.getEventCoordinate(evt));
+	 	
+        console.log(evt.coordinate);
+	 });
 	
 	// Mobile map switcher
 	if (isSmall()) {
@@ -118,6 +142,7 @@ $(document).ready(function() {
 	$.getJSON(masterurl, function(data) {
 		data = clean_google_sheet_json(data);
 		// console.log(data);
+		data = data.reverse();
 
 		$("#storylist").html(list_template({stories: data}));
 
@@ -189,10 +214,10 @@ function isMedium() {
 
 function hide_landing()
 {
-	if (onlanding) {
-		$("#landing").slideUp();
-		onlanding = 0;
-	}
+	$("#landing").slideUp(700);
+	$("#landing").children().each(function() {
+		$(this).fadeOut(500);
+	})
 }
 
 function open_modal(key)
